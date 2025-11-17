@@ -106,7 +106,6 @@ Le MCD MERISE se compose de 5 entités principales :
 | `code_parcelle` | | Code parcellaire |
 | `section` | | Section cadastrale |
 | `numero` | | Numéro de parcelle |
-| `surface` | | Surface en m² |
 | `id` | FK | Référence à Adresse |
 
 ### **Associations du MCD**
