@@ -37,20 +37,6 @@ Vérifiez vos installations :
 
 ---
 
-## 🚀 Installation rapide
-
-### Étape 1 : Démarrer le conteneur PostgreSQL
-
-```bash
-docker-compose up 
-```
-
-Cette commande :
-- Télécharge l'image PostgreSQL si nécessaire
-- Crée et démarre le conteneur en arrière-plan (`-d` = detached mode)
-- Monte un volume persistant pour conserver les données
-
-
 ## 🏗️ Modèle Conceptuel de Données (MCD)
 
 Le MCD MERISE se compose de 5 entités principales :
