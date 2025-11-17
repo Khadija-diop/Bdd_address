@@ -1,6 +1,6 @@
 # 📘 Projet Base de Données Adresses 
 
-Ce projet implémente une base de données relationnelle normalisée destinée à stocker, structurer et analyser un jeu d'adresses françaises (communes, voies, adresses, positions GPS et parcelles cadastrales). Il suit une modélisation **MERISE** complète (MCD → MLD → MPD) et un déploiement via **PostgreSQL + Docker Compose**.
+Ce projet implémente une base de données relationnelle normalisée destinée à stocker, structurer et analyser un jeu d'adresses françaises (communes, voies, adresses, positions GPS et parcelles cadastrales). Il suit une modélisation **MERISE** complète (MCD → MLD → MPD) et un base de donnée**PostgreSQL + Docker Compose**.
 
 ---
 
