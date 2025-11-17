@@ -1,0 +1,14 @@
+services:
+  bdaddress:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: root0987
+      POSTGRES_DB: address
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
