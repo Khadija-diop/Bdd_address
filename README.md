@@ -101,7 +101,7 @@ Le MCD MERISE se compose de 5 entités principales :
 - **Avoir** : Adresse → Position (1,1)
 - **Posséder** : Adresse → CadastreParcelle (0,n)
 
-> 📎 *L'image du MCD, MLD et MPD sont fournies dans le dossier `/docs` du projet.*
+> 📎 *L'image du MCD, MLD,MPD et le dictionnaire des règles sont fournies dans le dossier `/docs` du projet.*
 
 ---
 
