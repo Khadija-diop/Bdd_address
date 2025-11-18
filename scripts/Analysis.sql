@@ -1,11 +1,3 @@
--- ============================================================================
--- Script d'analyse et de statistiques sur les adresses
--- ============================================================================
-
--- ============================================================================
--- PARTIE 1 : STATISTIQUES PAR COMMUNE
--- ============================================================================
--- Nombre total d'adresses par commune avec moyenne d'adresses par voie
 SELECT 
     m.municipality_name,
     COUNT(a.id) AS total_addresses,
@@ -16,10 +8,6 @@ JOIN municipality m ON a.insee_code = m.insee_code
 GROUP BY m.municipality_name
 ORDER BY m.municipality_name;
 
-
--- ============================================================================
--- PARTIE 2 : TOP 10 DES COMMUNES AVEC LE PLUS D'ADRESSES
--- ============================================================================
 SELECT 
     m.municipality_name,
     COUNT(a.id) AS total_addresses
@@ -29,10 +17,6 @@ GROUP BY m.municipality_name
 ORDER BY total_addresses DESC
 LIMIT 10;
 
--- ============================================================================
--- PARTIE 3 : AUDIT DE QUALITÉ DES DONNÉES
--- ============================================================================
--- Vérification du taux de remplissage des colonnes importantes
 SELECT
     COUNT(*) AS total_addresses,
     COUNT(*) FILTER (WHERE number IS NOT NULL) AS number_filled,

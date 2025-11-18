@@ -1,10 +1,3 @@
--- ============================================================================
--- Script de détection et suppression des doublons
--- ============================================================================
-
--- ============================================================================
--- PARTIE 1 : VÉRIFICATION DES DOUBLONS DANS ADDRESS
--- ============================================================================
 SELECT 
     number,
     road_id,
@@ -17,64 +10,44 @@ GROUP BY number, road_id, postal_code, insee_code
 HAVING COUNT(*) > 1
 ORDER BY duplicate_count DESC;
 
+CREATE INDEX IF NOT EXISTS idx_address_duplicates_temp 
+ON address(number, road_id, postal_code, insee_code, id);
 
--- ============================================================================
--- PARTIE 2 : SUPPRESSION DES DOUBLONS EN CASCADE
--- ============================================================================
--- Supprimer les address_position liées aux doublons
-WITH duplicates AS (
-    SELECT id,
-           ROW_NUMBER() OVER (
-               PARTITION BY number, road_id, postal_code, insee_code
-               ORDER BY id ASC
-           ) AS rn
-    FROM address
-)
+CREATE TEMP TABLE duplicates_temp AS
+SELECT id,
+       ROW_NUMBER() OVER (
+           PARTITION BY number, road_id, postal_code, insee_code
+           ORDER BY id ASC
+       ) AS rn
+FROM address;
+
+CREATE INDEX idx_duplicates_temp_id ON duplicates_temp(id);
+CREATE INDEX idx_duplicates_temp_rn ON duplicates_temp(rn) WHERE rn > 1;
+
 DELETE FROM address_position ap
-USING duplicates d
+USING duplicates_temp d
 WHERE ap.address_id = d.id
   AND d.rn > 1;
 
--- Supprimer les cadastral_plot liées aux doublons
-WITH duplicates AS (
-    SELECT id,
-           ROW_NUMBER() OVER (
-               PARTITION BY number, road_id, postal_code, insee_code
-               ORDER BY id ASC
-           ) AS rn
-    FROM address
-)
 DELETE FROM cadastral_plot cp
-USING duplicates d
+USING duplicates_temp d
 WHERE cp.address_id = d.id
   AND d.rn > 1;
 
--- Supprimer les doublons dans address (garder rn = 1)
-WITH duplicates AS (
-    SELECT id,
-           ROW_NUMBER() OVER (
-               PARTITION BY number, road_id, postal_code, insee_code
-               ORDER BY id ASC
-           ) AS rn
-    FROM address
-)
 DELETE FROM address a
-USING duplicates d
+USING duplicates_temp d
 WHERE a.id = d.id
   AND d.rn > 1;
 
+DROP TABLE IF EXISTS duplicates_temp;
+DROP INDEX IF EXISTS idx_address_duplicates_temp;
 
--- ============================================================================
--- PARTIE 3 : VÉRIFICATION APRÈS SUPPRESSION
--- ============================================================================
--- Vérifier les codes postaux ayant plus de 10 000 adresses
 SELECT postal_code, COUNT(*) AS address_count
 FROM address
 GROUP BY postal_code
 HAVING COUNT(*) > 10000
 ORDER BY address_count DESC;
 
--- Vérifier les doublons de noms de communes
 SELECT municipality_name, COUNT(*)
 FROM municipality 
 GROUP BY municipality_name 

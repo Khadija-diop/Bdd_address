@@ -1,15 +1,7 @@
--- ============================================================================
--- Script de nettoyage des colonnes vides (toutes valeurs NULL)
--- ============================================================================
-
--- ============================================================================
--- PARTIE 1 : DÉTECTION DES COLONNES VIDES
--- ============================================================================
-
 DO $$
 DECLARE
-  tbl_schema text := 'public';   -- changer si besoin
-  tbl_name   text := 'road';  -- remplacer par ta table
+  tbl_schema text := 'public';
+  tbl_name   text := 'road';
   col record;
   cnt bigint;
 BEGIN
@@ -19,6 +11,7 @@ BEGIN
     WHERE table_schema = tbl_schema
       AND table_name = tbl_name
       AND column_name NOT IN ('id')
+  LOOP
     EXECUTE format('SELECT COUNT(*) FROM %I.%I WHERE %I IS NOT NULL', tbl_schema, tbl_name, col.column_name)
     INTO cnt;
     IF cnt = 0 THEN
@@ -27,13 +20,10 @@ BEGIN
   END LOOP;
 END $$;
 
--- ============================================================================
--- PARTIE 2 : SUPPRESSION AUTOMATIQUE DES COLONNES VIDES
--- ============================================================================
 DO $$
 DECLARE
-  tbl_schema text := 'public';   -- changer si besoin
-  tbl_name   text := 'road';  -- remplacer par ta table
+  tbl_schema text := 'public';
+  tbl_name   text := 'road';
   col record;
   cnt bigint;
 BEGIN
@@ -53,10 +43,5 @@ BEGIN
   END LOOP;
 END $$;
 
--- ============================================================================
--- PARTIE 3 : SUPPRESSION MANUELLE DE COLONNES SPÉCIFIQUES
--- ============================================================================
-
 ALTER TABLE address
 DROP COLUMN lat;
-

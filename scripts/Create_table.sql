@@ -1,10 +1,3 @@
--- ============================================================================
--- Script de création des tables (MPD - Modèle Physique de Données)
--- ============================================================================
-
--- ============================================================================
--- TABLE 1 : MUNICIPALITY (Communes)
--- ============================================================================
 create table municipality (
   insee_code VARCHAR(10) PRIMARY KEY,
   municipality_name VARCHAR(255) NOT NULL,
@@ -12,10 +5,6 @@ create table municipality (
   municipality_certification INTEGER
 );
 
-
--- ============================================================================
--- TABLE 2 : ROAD (Voies)
--- ============================================================================
 create table road (
   road_id SERIAL PRIMARY KEY,
   fantoir_id VARCHAR(50) UNIQUE,
@@ -29,10 +18,6 @@ create table road (
     REFERENCES municipality(insee_code)
 );
 
-
--- ============================================================================
--- TABLE 3 : ADDRESS (Adresses)
--- ============================================================================
 create table address (
   id VARCHAR(100) PRIMARY KEY,
   road_id INTEGER,
@@ -51,10 +36,6 @@ create table address (
     REFERENCES municipality(insee_code)
 );
 
-
--- ============================================================================
--- TABLE 4 : ADDRESS_POSITION (Positions GPS)
--- ============================================================================
 create table address_position (
   position_id SERIAL PRIMARY KEY,
   address_id VARCHAR(100) NOT NULL,
@@ -70,10 +51,6 @@ create table address_position (
     REFERENCES address(id)
 );
 
-
--- ============================================================================
--- TABLE 5 : CADASTRAL_PLOT (Parcelles cadastrales)
--- ============================================================================
 create table cadastral_plot (
   plot_id SERIAL PRIMARY KEY,
   address_id VARCHAR(100) NOT NULL,

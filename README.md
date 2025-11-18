@@ -1,6 +1,6 @@
 # 📘 Projet Base de Données Adresses 
 
-Ce projet implémente une base de données relationnelle normalisée destinée à stocker, structurer et analyser un jeu d'adresses françaises (communes, voies, adresses, positions GPS et parcelles cadastrales). Il suit une modélisation **MERISE** complète (MCD → MLD → MPD) et un déploiement via **PostgreSQL + Docker Compose**.
+Ce projet implémente une base de données relationnelle normalisée destinée à stocker, structurer et analyser un jeu d'adresses françaises (communes, voies, adresses, positions GPS et parcelles cadastrales). Il suit une modélisation **MERISE** complète (MCD → MLD → MPD) et **PostgreSQL + Docker Compose**.
 
 ---
 
@@ -13,14 +13,12 @@ Ce projet implémente une base de données relationnelle normalisée destinée �
 5. [Déploiement via Docker Compose](#-déploiement-via-docker-compose)
 6. [Connexion avec DBeaver](#-connexion-avec-dbeaver)
 7. [Importation des données](#-importation-des-données-brutes)
-8. [Scripts ETL - Insertion des données](#-scripts-etl---insertion-des-données)
+8. [Scripts Insertion des données](#-scripts---insertion-des-données)
 9. [Nettoyage et qualité des données](#-nettoyage-et-qualité-des-données)
-10. [Triggers et validation automatique](#-triggers-et-validation-automatique)
-11. [Index et Optimisation](#-index-et-optimisation)
-12. [Requêtes SQL principales](#-requêtes-sql-principales)
-13. [Jeux de test & validations](#-jeux-de-test--validations)
-14. [Arborescence du projet](#-arborescence-du-projet)
-15. [Dépannage](#-dépannage)
+10. [Index et Optimisation](#-index-et-optimisation)
+11. [Requêtes SQL principales](#-requêtes-sql-principales)
+12. [Jeux de test & validations](#-jeux-de-test--validations)
+13. [Arborescence du projet](#-arborescence-du-projet)
 
 ---
 
@@ -37,20 +35,6 @@ Vérifiez vos installations :
 
 
 ---
-
-## 🚀 Installation rapide
-
-### Étape 1 : Démarrer le conteneur PostgreSQL
-
-```bash
-docker-compose up 
-```
-
-Cette commande :
-- Télécharge l'image PostgreSQL si nécessaire
-- Crée et démarre le conteneur en arrière-plan (`-d` = detached mode)
-- Monte un volume persistant pour conserver les données
-
 
 ## 🏗️ Modèle Conceptuel de Données (MCD)
 
@@ -116,7 +100,7 @@ Le MCD MERISE se compose de 5 entités principales :
 - **Avoir** : Adresse → Position (1,1)
 - **Posséder** : Adresse → CadastreParcelle (0,n)
 
-> 📎 *L'image du MCD, MLD et MPD sont fournies dans le dossier `/docs` du projet.*
+> 📎 *Les images du MCD, MLD et MPD sont fournies dans le dossier `/docs` du projet.*
 
 ---
 
@@ -140,66 +124,46 @@ Toutes les clés primaires et étrangères respectent les cardinalités MERISE.
 
 ---
 
-## 🐳 Docker Compose
-
-### **Configuration docker-compose.yml**
-
-```yaml
-services:
-  bdaddress:
-    image: postgres
-    environment:
-      POSTGRES_PASSWORD: root0987
-      POSTGRES_DB: address
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-```
-
-### **Commandes utiles**
-
-#### Démarrer les services
-```bash
-docker-compose up 
-```
-
-#### Arrêter les services (sans supprimer les données)
-```bash
-docker-compose stop
-```
-
-#### Arrêter et supprimer les conteneurs (conserve les volumes)
-```bash
-docker-compose down
-```
-
-#### Arrêter et supprimer tout (y compris les volumes - ⚠️ supprime les données)
-```bash
-docker-compose down 
-```
-
-
 ---
 
+### **Étape 1 : Créer la table intermédiaire**
 ## 📥 Importation des données brutes
 
-Les données proviennent d'une table intermédiaire **adresses** contenant le fichier source CSV.
+Les données proviennent du fichier **`adresses-07.csv`** qui se trouve dans le dossier `data/`.
 
-### **Méthode : Via DBeaver**
+### **Étape 2 : Importer le fichier CSV**
 
-1. Clic droit sur la table `adresses` → `Import Data`
-2. Sélectionnez votre fichier CSV
-3. Configurez le mapping des colonnes
-4. Lancez l'import
-
+#### **Méthode : Via DBeaver**
+4. Clic droit sur la table  → `Import Data`
+5. Sélectionnez le fichier `data/adresses-07.csv`
+6. Configuration du mapping des colonnes:
+>** Avant l'importation dans DBeaver (lors du "Customize" mapping), il est conseillé de spécifier le type de colonne :**
+> - Définir **`nom_voie`** en **`text`** (champ texte)
+> - Définir **`cad_parcelles`** en **`text`** (champ texte)
+7. Lancez l'import
 
 ---
 
 ## 🔄 Scripts: (Insertion + Nettoyage + Validation)
+
+### **Ordre d'exécution des scripts**
+
+⚠️ **IMPORTANT** : Les scripts doivent être exécutés dans l'ordre suivant pour garantir la cohérence des données :
+#### **Scripts d'initialisation (à exécuter dans l'ordre)**
+1. **`Create_Table.sql`** - Création de la structure de la base de données (tables, contraintes)
+2. **`Insertion.sql`** - Insertion des données depuis la table intermédiaire `adresses` vers les tables normalisées
+3. **`Analysis_Optimization.sql`** - Création des index pour optimiser les performances
+4. **`Double.sql`** - Détection et suppression des doublons
+5. **`Empty_column_cleaning.sql`** - Nettoyage des colonnes vides (optionnel)
+#### **Scripts de requêtes et analyses (à exécuter après l'initialisation)**
+- **`Consultation_Requests.sql`** - Requêtes de consultation et recherche d'adresses
+- **`Analysis.sql`** - Requêtes d'analyse et statistiques
+- **`Aggregation_Analysis1.sql`** - Requêtes d'agrégation et analyses avancées
+- **`Crud.sql`** - Exemples d'opérations CRUD (Create, Read, Update, Delete)
+6. **`Trigger.sql`** à faire ...
+
+
+### **Détails des scripts**
 
 Le script `scripts/Insertion.sql` permet d'insérer les données depuis la table intermédiaire vers les tables normalisées.
 
@@ -234,7 +198,7 @@ Le script `scripts/Double.sql` permet de détecter et supprimer les adresses en 
   - Suppression des adresses dupliquées (conservation de la première occurrence)
 - **Vérification** : Contrôle des codes postaux et des noms de communes après suppression
 
-> ✅ **Résultat** : Tous les doublons ont été supprimés après vérification manuelle.
+>  **Résultat** : Tous les doublons ont été supprimés après vérification manuelle.
 
 ### **2. Suppression des adresses incohérentes**
 
@@ -246,30 +210,13 @@ Le script `scripts/Consultation_Requests.sql` permet de détecter les incohéren
   - Adresses sans commune associée
   - Incohérences entre code postal de l'adresse et code postal de la commune
 
-> ✅ **Résultat** : Toutes les adresses incohérentes ont été identifiées et supprimées.
+> **Résultat** : Toutes les adresses incohérentes ont été identifiées et supprimées.
 
 ### **3. Nettoyage des colonnes vides**
 
 Le script `scripts/Empty_column_cleaning.sql` permet de :
 - Détecter les colonnes entièrement vides (toutes valeurs NULL)
 - Supprimer automatiquement ces colonnes vides si nécessaire
-
----
-
-## ⚙️ Triggers et validation automatique
-
-Le script `scripts/Trigger.sql` crée des triggers pour valider automatiquement les données.
-
-### **Validation des adresses**
-
-- **Cohérence code postal ↔ commune** : Vérifie que le code postal correspond à la commune
-- **Timestamps automatiques** : `created_at` et `updated_at` sont mis à jour automatiquement
-- **Intégrité référentielle** : Vérifie l'existence des voies et communes référencées
-
-### **Validation des positions GPS**
-
-- **Coordonnées obligatoires** : `lat` et `lon` doivent être renseignées
-- **Bornes départementales** : Validation que les coordonnées sont dans les limites du département (exemple : Paris)
 
 ---
 
@@ -320,40 +267,83 @@ GROUP BY m.municipality_name
 ORDER BY nombre_adresses DESC;
 ```
 
-### **Recherches**
+### **Requêtes de consultation et recherche**
 
-Le script `scripts/Consultation_Requests.sql` contient plusieurs requêtes de recherche :
+Le script `scripts/Consultation_Requests.sql` contient plusieurs requêtes de recherche et consultation :
 
-- Recherche d'adresses par commune
-- Comptage d'adresses par commune et voie
-- Liste des communes distinctes
-- Recherche de voies contenant un mot-clé
-- Détection d'incohérences (adresses sans code postal)
+- **Recherche d'adresses par commune** : Récupération de toutes les adresses d'une commune spécifique (ex: Montpezat-sous-Bauzon) avec leurs détails complets
+- **Comptage d'adresses par commune et voie** : Statistiques sur le nombre d'adresses pour chaque couple commune/voie
+- **Liste des communes distinctes** : Obtention de la liste unique de toutes les communes présentes dans la base
+- **Recherche de voies contenant un mot-clé** : Recherche de toutes les adresses situées dans des voies contenant un terme spécifique (ex: "Boulevard")
+- **Détection d'incohérences** : Identification des adresses sans code postal alors que la commune existe (pour audit de qualité)
 
-### **Analyses**
+### **Analyses et statistiques**
 
-Le script `scripts/Analysis.sql` contient des requêtes d'analyse :
+Le script `scripts/Analysis.sql` contient des requêtes d'analyse et de statistiques :
 
-- Statistiques par commune avec moyenne d'adresses par voie
-- Top 10 des communes avec le plus d'adresses
-- Audit de qualité des données (taux de remplissage des colonnes)
+- **Statistiques par commune** : Nombre total d'adresses par commune avec calcul de la moyenne d'adresses par voie (utilisation de fonctions de fenêtre)
+- **Top 10 des communes** : Classement des communes ayant le plus d'adresses, triées par ordre décroissant
+- **Audit de qualité des données** : Analyse du taux de remplissage des colonnes importantes (number, road_id, postal_code, insee_code) avec calcul de pourcentages pour identifier les données manquantes
+
+### **Agrégations et analyses avancées**
+
+Le script `scripts/Aggregation_Analysis1.sql` contient :
+
+- Recherche d'adresses par commune spécifique (ex: Villeneuve-de-Berg)
+- Modification de structure de table (changement de type de colonne)
+- Requêtes avec jointures complexes pour obtenir des informations complètes sur les adresses
 
 ---
-
 ## 🧪 Jeux de test & validations
 
-Le script `scripts/Crud.sql` contient des exemples d'opérations CRUD :
+### **Opérations CRUD**
 
-- **INSERT** : Insertion de communes, voies, adresses et positions
-- **UPDATE** : Mise à jour de données
-- **DELETE** : Suppression conditionnelle (ex: adresses avec numéro invalide)
-- **SELECT** : Vérifications finales
+Le script `scripts/Crud.sql` contient des exemples complets d'opérations CRUD :
+
+- **INSERT** : Insertion de communes, voies, adresses et positions avec gestion des conflits
+- **UPDATE** : Mise à jour de données (ex: modification du nom d'une voie via une adresse)
+- **DELETE** : Suppression conditionnelle en cascade (ex: adresses avec numéro invalide)
+- **SELECT** : Vérifications finales pour valider les opérations
 
 Le script `scripts/Trigger.sql` contient des tests de validation :
 
 - Test d'insertion valide
 - Test d'insertion invalide (GPS hors bornes)
 - Vérification de l'intégrité référentielle
+
+
+## 🐳 Docker Compose
+
+### **Configuration docker-compose.yml**
+
+```yaml
+services:
+  bdaddress:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: root0987
+      POSTGRES_DB: address
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+### **Commandes utiles**
+
+#### Démarrer les services
+```bash
+docker-compose up 
+```
+
+#### Arrêter et supprimer les conteneurs (conserve les volumes)
+```bash
+docker-compose down
+```
+
 
 ---
 
@@ -374,52 +364,12 @@ Le script `scripts/Trigger.sql` contient des tests de validation :
  │     ├── Consultation_Requests.sql     # Requêtes de consultation et recherche
  │     ├── Analysis.sql                  # Requêtes d'analyse et statistiques
  │     ├── Analysis_Optimization.sql    # Création des index et optimisation
- │     ├── Trigger.sql                   # Triggers de validation
  │     ├── Crud.sql                      # Exemples d'opérations CRUD
  │     ├── Aggregation_Analysis1.sql     # Requêtes d'agrégation
  │     └── Empty_column_cleaning.sql    # Nettoyage des colonnes vides
  ├── docker-compose.yml                 # Configuration Docker
  └── README.md                          # Ce fichier
 ```
-
----
-
-## 🧹 Scripts 
-
-# Réexécuter les scripts SQL dans l'ordre :
-# 1. Create_Table.sql
-# 2. Insertion.sql
-# 3. Double.sql (nettoyage des doublons)
-# 4. Trigger.sql (validation)
-# 5. Analysis_Optimization.sql (index)
-```
-
----
-
-## 🏁 Conclusion
-
-Ce projet constitue une base solide et optimisée pour gérer un ensemble complexe d'adresses françaises. Il inclut :
-
-✅ Une modélisation MERISE complète (MCD → MLD → MPD)  
-✅ Un MPD entièrement fonctionnel avec PostgreSQL  
-✅ Un déploiement Docker reproductible et portable  
-✅ Des triggers de validation automatiques  
-✅ Des index optimisés pour les performances  
-✅ Des scripts ETL pour l'importation et le nettoyage  
-✅ **Nettoyage complet des doublons après vérification**  
-✅ **Suppression des adresses incohérentes**  
-✅ Une documentation complète  
-
-### **Vérification de l'intégrité référentielle**
-
-Ce projet peut servir de fondation pour :
-
-- 🗺️ **SIG (Systèmes d'Information Géographique)**
-- 🌐 **API d'adresses** (géocodage, reverse géocodage)
-- 📍 **Applications de géolocalisation**
-- 🔗 **Interfaçage avec OpenStreetMap ou data.gouv.fr**
-- 📊 **Analyses statistiques territoriales**
-
 ---
 
 💡 *Ce README est évolutif.*
